@@ -1,4 +1,6 @@
 ## Unreleased
+BUG FIXES:
+* resource/spotinst_ocean_ecs: Treat the `CLUSTER_HAS_NO_ACTIVE_INSTANCES` API error during a roll as a no-op instead of failing the apply (clusters autoscaled to zero instances). Applied the same handling to the other Ocean roll paths (`spotinst_ocean_aws`, `spotinst_ocean_aws_launch_spec`, `spotinst_ocean_gke_import`, `spotinst_ocean_gke_launch_spec`, `spotinst_ocean_aks_np`, `spotinst_ocean_aks_np_virtual_node_group`).
 
 ## 1.238.0 (July, 2 2026)
 NOTES:

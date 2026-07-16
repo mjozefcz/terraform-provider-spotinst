@@ -2,6 +2,7 @@ package spotinst
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -11,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/spotinst/spotinst-sdk-go/service/ocean/providers/aws"
 	"github.com/spotinst/spotinst-sdk-go/spotinst"
+	"github.com/spotinst/spotinst-sdk-go/spotinst/client"
 	"github.com/spotinst/terraform-provider-spotinst/spotinst/commons"
 )
 
@@ -1014,5 +1016,59 @@ const testLogging_Create = `
 `
 
 const testLogging_EmptyFields = ``
+
+// endregion
+
+// region OceanECS: Roll error handling
+
+func TestClusterHasNoActiveInstances(t *testing.T) {
+	cases := []struct {
+		name string
+		err  error
+		want bool
+	}{
+		{
+			name: "nil error",
+			err:  nil,
+			want: false,
+		},
+		{
+			name: "plain error",
+			err:  errors.New("boom"),
+			want: false,
+		},
+		{
+			name: "different API error code",
+			err:  client.Errors{{Code: ErrCodeECSClusterNotFound}},
+			want: false,
+		},
+		{
+			name: "matching code",
+			err:  client.Errors{{Code: ErrCodeClusterHasNoActiveInstances}},
+			want: true,
+		},
+		{
+			name: "matching code among others",
+			err: client.Errors{
+				{Code: "SOME_OTHER_CODE"},
+				{Code: ErrCodeClusterHasNoActiveInstances},
+			},
+			want: true,
+		},
+		{
+			name: "empty errors slice",
+			err:  client.Errors{},
+			want: false,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := clusterHasNoActiveInstances(tc.err); got != tc.want {
+				t.Errorf("clusterHasNoActiveInstances() = %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
 
 // endregion
